@@ -123,6 +123,7 @@ public class Hash {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph hash {\n");
         sb.append("node [shape=record,width=.4,height=.4];\n");
+        sb.append("rankdir = TB \n; splines = polyline;\n");
         sb.append("nodeZ[label= \"");
         for(int i = 0 ; i < size; i++){
             if(i != size -1)

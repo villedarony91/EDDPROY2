@@ -8,6 +8,8 @@ import avl.*;
 import java.util.regex.Pattern;
 import listascolas.*;
 import eddarbolb.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  *
@@ -63,7 +65,26 @@ public class MessageReceiver {
             Log.logger.warn("error de parseo ");
         }
     }
-    
+        int count = 0;    
+        public void sale(String user){
+            NodoAvl tmp = avl.searchNode(user);
+            double tot = 0;
+            if(tmp != null && tmp.carrito != null && tmp.carrito.root != null){
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                String strDate = sdf.format(date);
+                Lista tmpCarr = tmp.carrito;
+                Nodo aux = tmpCarr.root;
+                
+                while(aux != null){
+                    tot += (aux.prod.price * aux.cant);
+                    aux = aux.next;
+                }
+                count ++;
+                arbolB.Insertar(count, strDate, tot, tmp, tmpCarr);
+            }
+        }
+        
     void insertToB(String[] msg){
         if(msg.length == 4){
             try{

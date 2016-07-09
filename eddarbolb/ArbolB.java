@@ -531,6 +531,10 @@ public class ArbolB {
     }
     
        public void Insertar(int numFactura,String fecha,double total,NodoAvl usuario){
+        if(usuario == null){
+            Log.logger.error("Usuario no encontrado");
+            return;
+        }
         
         Pagina nuevo,actual;
         

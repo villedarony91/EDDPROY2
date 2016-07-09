@@ -14,7 +14,7 @@ public class Nodo {
     String address;
     int envio;
     int fact;
-    int cant;
+    public int cant;
     public Producto prod;
     public Nodo next;
     

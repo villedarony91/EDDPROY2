@@ -202,5 +202,24 @@ public class Foo {
     public String sendArbolB() {
         return mr.arbolB.graficarArolbB(mr.arbolB);
     }
+
+    /**
+     * Web service operation
+     */
+    @WebMethod(operationName = "sale")
+    public String sale(@WebParam(name = "user") String user) {
+        mr.sale(user);
+        return "recibido venta";
+    }
+
+    /**
+     * Web service operation
+     */
+    @WebMethod(operationName = "sendHashGraph")
+    public String sendHashGraph() {
+        return mr.hash.graphHash();
+    }
+
+   
  
 }

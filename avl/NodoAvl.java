@@ -10,8 +10,8 @@ public class NodoAvl {
     public String username;
     String password;
     Lista direcciones;
-    Lista whish;
-    Lista carrito;
+    public Lista whish;
+    public Lista carrito;
     NodoAvl izq;
     NodoAvl der;  
     int altura;    
@@ -50,7 +50,7 @@ public class NodoAvl {
 
     public String getGraphContent() {
         return "digraph grafica{\n" +
-               "rankdir=TB;\n" +
+               "rankdir=TB;\n" + 
                "node [shape = record];\n"+
                 getNodes()+
                 "}\n";

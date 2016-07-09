@@ -16,7 +16,8 @@ public class ArbolAvl {
     }
 
     public String apGraph() {
-        return root.getGraphContent();
+        String ret = (root == null) ? "" : root.getGraphContent();
+        return ret;
     }
 
     private NodoAvl rotDI(NodoAvl n1) {
