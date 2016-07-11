@@ -57,13 +57,26 @@ public class MessageReceiver {
                     Log.logger.info("recibido venta");
                     break;
                 case "Detalle":
-                    
+                    insertDet(str);
                     Log.logger.info("recibido detalle");
                     break;
             }
         }else{
             Log.logger.warn("error de parseo ");
         }
+    }
+    
+    public void insertDet(String [] msg){
+        try{
+            int fact = Integer.parseInt(msg[0]);
+            int cant = Integer.parseInt(msg[1]);
+            double price = Double.parseDouble(msg[2]);
+            int code = Integer.parseInt(msg[3]);
+            arbolB.insertarDetalle(fact, cant,price, hash.search(code));            
+        }catch(Exception ex){
+            Log.logger.error("Error en insercion de detalle");
+        }
+
     }
         int count = 0;    
         public void sale(String user){

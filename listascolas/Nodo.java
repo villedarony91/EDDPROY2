@@ -17,9 +17,19 @@ public class Nodo {
     public int cant;
     public Producto prod;
     public Nodo next;
+    public double precioDetalle;
+    public String nodeId;
     
     Nodo(String user){
         this.user = user;
+    }
+    
+
+
+Nodo(int cantidad, double precioDetalle, Producto producto){
+        this.cant = cantidad;
+        this.precioDetalle = precioDetalle;
+        this.prod = producto;
     }
     
 }

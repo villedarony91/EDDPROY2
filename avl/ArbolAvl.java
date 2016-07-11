@@ -6,9 +6,11 @@ import listascolas.*;
 public class ArbolAvl {
 
     private NodoAvl root;
+    private int iter;
 
     public ArbolAvl() {
         root = null;
+        iter = 0;
     }
 
     public void insert(String user, String pass) {
@@ -16,8 +18,12 @@ public class ArbolAvl {
     }
 
     public String apGraph() {
-        String ret = (root == null) ? "" : root.getGraphContent();
-        return ret;
+        if(root != null){
+            root.nameAvl();
+            return doBigGraph();
+        }else{
+        return "";
+        }
     }
 
     private NodoAvl rotDI(NodoAvl n1) {
@@ -140,7 +146,7 @@ public class ArbolAvl {
     
     public String graphAdress(String user){
         NodoAvl tmp = root;
-        String ret = "Usuario no encontrado";
+        String ret = "";
         while (tmp != null && !tmp.username.equals(user)) {
             if (user.compareTo(tmp.username) < 0) {
                 tmp = tmp.izq;
@@ -155,9 +161,70 @@ public class ArbolAvl {
         return ret;
     }
     
+    public String doBigGraph(){
+        NodoAvl tmp = root;
+        StringBuilder sb = new StringBuilder();
+        sb.append("subgraph {");
+        sb.append("node [shape = record];\n");
+        sb.append(getLabelNodeAvl());
+        sb.append("}");
+        Log.logger.info(sb.toString());
+        return sb.toString();
+    }
+    
+    private String getLabelNodeAvl(){
+        return concatLabel(this.root);
+    }
+    
+    
+    private String concatLabel(NodoAvl tmp){
+        StringBuilder sb = new StringBuilder();
+        sb.append(tmp.nom).append("[label = \"").append("<izq>|")
+                .append(tmp.username).append("\\n").append(tmp.password)
+                .append("|<der>")
+                .append("\"];");
+        if(tmp.carrito != null){sb.append(getCarrito(tmp));}
+        if(tmp.whish != null){ sb.append(getWish(tmp));}
+        if(tmp.direcciones != null){ sb.append(getAdress(tmp));}
+        
+        if(tmp.izq != null){
+            sb.append(tmp.nom).append(":izq->").append(tmp.izq.nom).append(";\n");
+            sb.append(concatLabel(tmp.izq));
+        }
+        if(tmp.der != null){
+            sb.append(tmp.nom).append(":der->").append(tmp.der.nom).append(";\n");
+            sb.append(concatLabel(tmp.der));
+        }
+        return sb.toString();
+    }
+    
+    private String getCarrito(NodoAvl tmp){
+        StringBuilder sb = new StringBuilder();
+        sb.append(tmp.carrito.graphBigQueue(tmp.nom+"C","Carrito"));
+        sb.append(tmp.nom).append("->").append(tmp.nom).append("C0")
+                .append(";\n");
+        return sb.toString();
+    }
+    
+    private String getWish(NodoAvl tmp){
+        StringBuilder sb = new StringBuilder();
+        sb.append(tmp.whish.graphBigQueue(tmp.nom+"W","Whislist"));
+        sb.append(tmp.nom).append("->").append(tmp.nom).append("W0")
+                .append(";\n");
+        return sb.toString();
+    }
+    
+    private String getAdress(NodoAvl tmp){
+        StringBuilder sb = new StringBuilder();
+        sb.append(tmp.direcciones.graphBigList(tmp.nom+"Add"));
+        sb.append(tmp.nom).append("->").append(tmp.nom).append("Add0")
+                .append(";\n");
+        return sb.toString();
+    }
+    
     public String graphWhish(String user){
         NodoAvl tmp = root;
-        String ret = "Usuario no encontrado";
+        String ret = "";
         while (tmp != null && !tmp.username.equals(user)) {
             if (user.compareTo(tmp.username) < 0) {
                 tmp = tmp.izq;
@@ -174,6 +241,23 @@ public class ArbolAvl {
     
     public String graphCarrito(String user){
         NodoAvl tmp = root;
+        String ret = "";
+        while (tmp != null && !tmp.username.equals(user)) {
+            if (user.compareTo(tmp.username) < 0) {
+                tmp = tmp.izq;
+            } else {
+                tmp = tmp.der;
+            }
+        }
+        if (tmp != null && user.equals(tmp.username)) {
+            if(tmp.carrito != null)
+                ret = tmp.carrito.graphQueue(user);
+        }
+        return ret;
+    }
+    
+    public String idGraphQueue(String user){
+        NodoAvl tmp = root;
         String ret = "Usuario no encontrado";
         while (tmp != null && !tmp.username.equals(user)) {
             if (user.compareTo(tmp.username) < 0) {
@@ -183,7 +267,7 @@ public class ArbolAvl {
             }
         }
         if (tmp != null && user.equals(tmp.username)) {
-            if(tmp.whish != null)
+            if(tmp.carrito != null)
                 ret = tmp.carrito.graphQueue(user);
         }
         return ret;
@@ -225,7 +309,7 @@ public class ArbolAvl {
         StringBuilder sb = new StringBuilder();
         sb.append("");
         if(tmp!= null){
-            if(tmp.carrito.root != null){
+            if(tmp.carrito != null && tmp.carrito.root != null){
                 Lista wTmp= tmp.carrito;
                 sb.append(wTmp.getProdCode()).append(";");
                 sb.append(wTmp.getProdNames()).append(";");

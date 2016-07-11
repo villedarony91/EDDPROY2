@@ -51,7 +51,11 @@ public class Foo {
      */
     @WebMethod(operationName = "graphAvlTree")
     public String graphAvlTree() {
-        return mr.avl.apGraph();
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph avl{");
+        sb.append(mr.avl.apGraph());
+        sb.append("}");
+        return sb.toString();
     }
 
     /**
@@ -59,7 +63,11 @@ public class Foo {
      */
     @WebMethod(operationName = "graphAdList")
     public String graphAdList(@WebParam(name = "username") String username) {
-        return mr.avl.graphAdress(username);
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph g{");
+        sb.append(mr.avl.graphAdress(username));
+        sb.append("}");
+        return  sb.toString();
     }
 
     /**
@@ -82,8 +90,12 @@ public class Foo {
      * Web service operation
      */
     @WebMethod(operationName = "sendWhishGraph")
-    public String sendWhishGraph(@WebParam(name = "user") String user) {e:
-        return mr.avl.graphWhish(user);
+    public String sendWhishGraph(@WebParam(name = "user") String user) {
+    StringBuilder sb = new StringBuilder();
+        sb.append("digraph g {\n");
+        sb.append(mr.avl.graphWhish(user));
+        sb.append("}");
+        return sb.toString();
     }
 
     /**
@@ -91,7 +103,11 @@ public class Foo {
      */
     @WebMethod(operationName = "sendCarritoGraph")
     public String sendCarritoGraph(@WebParam(name = "user") String user) {
-        return mr.avl.graphCarrito(user);
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph g {\n");
+        sb.append(mr.avl.graphCarrito(user));
+        sb.append("}");
+        return sb.toString();
     }
 
     /**

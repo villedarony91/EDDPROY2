@@ -7,6 +7,10 @@ package eddarbolb;
 import Utilities.Log;
 import java.io.*;
 import avl.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
 import listascolas.*;
 
 /**
@@ -636,10 +640,10 @@ public class ArbolB {
                 j++;
                 if(actual.claves[i] > 0){
                     if(i != 4){
-                      cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario+"|<f"+((i+j)+1)+">\n";   
+                      cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario.username+"|<f"+((i+j)+1)+">\n";   
                     }
                     else{
-                        cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario+"\n";   
+                        cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario.username+"\n";   
                     } 
                 }  
             }
@@ -671,5 +675,327 @@ public String graficarArolbB(ArbolB arbol){
         
         return dot;
     }    
+
     
+    // ------ NUMERO FACTURA ----
+    
+    public int numeroDeFactura(){
+        
+        int numeroFactura;
+        
+        Random random = new Random();
+        numeroFactura = (int) (random.nextDouble() * 50000000+ 1);
+            
+        while (numeroFactura == 0 || existeClave(numeroFactura) == true){
+            numeroFactura = (int) (random.nextDouble() * 50000000+ 1);
+        }
+        
+        return numeroFactura;
+        
+        
+    }
+    
+    // ------ CARGA MASIVA DETALLE -----
+    //Metodos para insertar detalle factura
+    public Pagina buscarPagina(int numFactura, Pagina actual){
+        
+        
+        int i;
+        
+        if(numFactura < actual.claves[0]){
+            
+            if (actual.ramas[0] != null){
+                
+                return (recorrerArbol(actual.ramas[0],numFactura));
+            }           
+        }
+        else{
+            
+            i = actual.cuenta - 1;
+            
+            //Si la clave a buscar es menor que las claves de la pagina y hay elementos hace el while
+            while((numFactura <= actual.claves[i]) && i > 0){
+                
+                //si la clave a buscar es igual a la clave de la pagina actual, devuelve que la clave existe
+                if(numFactura == actual.claves[i]){
+                    
+                    return actual;
+                }
+                i--;
+            }
+            
+            if(numFactura == actual.claves[i]){
+                
+                return actual;
+            }
+            
+            if(numFactura > actual.claves[i]){
+                
+                if(actual.ramas[i+1] != null){
+                    
+                    return (recorrerArbol(actual.ramas[i+1],numFactura));
+                }
+
+            }
+        }
+        
+        return null; 
+        
+    }
+    
+    
+    
+    public void insertarDetalle(int numFactura, int cantidad, double precio, Producto producto){
+
+       Pagina pagina = buscarPagina(numFactura,this.raiz); //Busca la pagina en la que se encuentra el numero de Factura
+        
+        
+        
+        if(pagina != null){
+            for (int i = 0; i < pagina.cuenta;i++){
+                if(pagina.claves[i] == numFactura){
+                    if(pagina.facturas[i].detalle !=null && producto != null){
+                        pagina.facturas[i].detalle.insertDetalle(cantidad,precio,producto);
+                        pagina.facturas[i].total = pagina.facturas[i].total + (precio * cantidad);
+                    }
+                    else{
+                        if(producto == null){
+                            Log.logger.warn("Producto no existe");
+                        }
+                        else{
+                            Lista lista = new Lista();
+                            lista.insertDetalle(cantidad,precio,producto);
+                            pagina.facturas[i].total = pagina.facturas[i].total + (precio * cantidad);
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            Log.logger.error("No existe factura, insersion de detalle fallida");
+        }
+        
+    }
+    
+    
+    // ------- REPORTES ----------
+    
+        
+    private String facturasPorFecha(String fechaIni, String fechaFin, String cuerpo, Pagina actual) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            cuerpo = cuerpo + facturasPorFecha(fechaIni,fechaFin,cuerpo,actual.ramas[0]);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                fechaActual = formato.parse(actual.facturas[j].fecha);
+                
+                if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+                    
+                    cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                }
+                if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+                    
+                    cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                }
+                
+                cuerpo = cuerpo + facturasPorFecha(fechaIni,fechaFin,cuerpo,actual.ramas[j+1]);   
+            }
+        }
+        return cuerpo;
+    }
+        
+    private String facturasPorValor(double valor, Pagina actual, String cuerpo){
+         if(actual != null){
+            cuerpo = cuerpo + facturasPorValor(valor,actual.ramas[0],cuerpo);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                                
+                if(valor == actual.facturas[j].total){
+                    
+                    cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                }
+                
+                cuerpo = cuerpo + facturasPorValor(valor,actual.ramas[j+1],cuerpo);
+            }
+        }
+        return cuerpo;
+    }
+        
+    private String facturasPorUsuario(NodoAvl usuario, Pagina actual, String cuerpo){
+         if(actual != null){
+            cuerpo = cuerpo + facturasPorUsuario(usuario,actual.ramas[0],cuerpo);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                
+                if(usuario == actual.facturas[j].usuario){
+                    
+                    cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                }
+                
+                cuerpo = cuerpo + facturasPorUsuario(usuario,actual.ramas[j+1],cuerpo);
+            }
+        }
+        return cuerpo;
+    }
+    
+    private String facturasPorValorYUsuarios(double valor,NodoAvl usuario, Pagina actual, String cuerpo){
+        
+        if(actual != null){
+            cuerpo = cuerpo + facturasPorValorYUsuarios(valor, usuario,actual.ramas[0],cuerpo);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                
+                if(valor == actual.facturas[j].total && usuario == actual.facturas[j].usuario){
+                    
+                    cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                }
+                
+                cuerpo = cuerpo + facturasPorValorYUsuarios(valor, usuario,actual.ramas[j+1],cuerpo);
+            }
+        }
+        return cuerpo;
+    }
+    
+    private String facturasPorFechaYUsuarios(NodoAvl usuario,String fechaIni, String fechaFin, String cuerpo, Pagina actual) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            cuerpo = cuerpo + facturasPorFechaYUsuarios(usuario,fechaIni,fechaFin,cuerpo,actual.ramas[0]);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                fechaActual = formato.parse(actual.facturas[j].fecha);
+                
+                if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+                    
+                    if(usuario == actual.facturas[j].usuario){
+                    
+                        cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                    }
+                }
+                if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+                    
+                    if(usuario == actual.facturas[j].usuario){
+                    
+                        cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                    }
+                }
+                
+                cuerpo = cuerpo + facturasPorFechaYUsuarios(usuario,fechaIni,fechaFin,cuerpo,actual.ramas[j+1]);   
+            }
+        }
+        return cuerpo;
+    }
+    
+    private String facturasPorFechaYValor(double valor,String fechaIni, String fechaFin, String cuerpo, Pagina actual) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            cuerpo = cuerpo + facturasPorFechaYValor(valor,fechaIni,fechaFin,cuerpo,actual.ramas[0]);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                fechaActual = formato.parse(actual.facturas[j].fecha);
+                
+                if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+                    
+                    if(valor == actual.facturas[j].total){
+
+                        cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                    }
+                }
+                if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+                    
+                    if(valor == actual.facturas[j].total){
+
+                        cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                    }
+                }
+                
+                cuerpo = cuerpo + facturasPorFechaYValor(valor,fechaIni,fechaFin,cuerpo,actual.ramas[j+1]);   
+            }
+        }
+        return cuerpo;
+    }
+    
+    private String facturasPorTodo(NodoAvl usuario,double valor,String fechaIni, String fechaFin, String cuerpo, Pagina actual) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            cuerpo = cuerpo + facturasPorTodo(usuario,valor,fechaIni,fechaFin,cuerpo,actual.ramas[0]);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                fechaActual = formato.parse(actual.facturas[j].fecha);
+                
+                if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+                    
+                    if(valor == actual.facturas[j].total){
+
+                        if(usuario == actual.facturas[j].usuario){
+                    
+                            cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                        }
+                    }
+                }
+                if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+                    
+                    if(valor == actual.facturas[j].total){
+
+                        if(usuario == actual.facturas[j].usuario){
+                    
+                            cuerpo = cuerpo + "Factura: "+ actual.claves[j] +",Fecha: "+actual.facturas[j].fecha +",Total: "+actual.facturas[j].total +",Usuario: "+actual.facturas[j].usuario.username+";";
+                        }
+                    }
+                }
+                
+                cuerpo = cuerpo + facturasPorTodo(usuario,valor,fechaIni,fechaFin,cuerpo,actual.ramas[j+1]);   
+            }
+        }
+        return cuerpo;
+    }
+    
+    public String reporte1(int f,int v, int u, String fechaIni, String fechaFin, double valor, NodoAvl usuario) throws ParseException{
+        String reporte = "";
+        
+        if(f == 0 && v == 0 && u == 0){
+            //no se puede crear reporte se debe de ingresar algun valor
+            reporte = "";
+        }
+        if(f == 0 && v == 0 && u == 1){
+            reporte = facturasPorUsuario(usuario,this.raiz,"");
+        }
+        if(f == 0 && v == 1 && u == 0){
+            reporte = facturasPorValor(valor,this.raiz,"");
+        }
+        if(f == 0 && v == 1 && u == 1){
+            reporte = facturasPorValorYUsuarios(valor,usuario,this.raiz,"");
+        }
+        if(f == 1 && v == 0 && u == 0){
+            reporte = facturasPorFecha(fechaIni,fechaFin,"",this.raiz);
+        }
+        if(f == 1 && v == 0 && u == 1){
+            reporte = facturasPorFechaYUsuarios(usuario,fechaIni,fechaFin,"",this.raiz);
+        }
+        if(f == 1 && v == 1 && u == 0){
+            reporte = facturasPorFechaYValor(valor,fechaIni,fechaFin,"",this.raiz);
+        }
+        if(f == 1 && v == 1 && u == 1){
+            reporte = facturasPorTodo(usuario,valor,fechaIni,fechaFin,"",this.raiz);
+        }
+        
+        return reporte;
+    }
+    
+        
 }

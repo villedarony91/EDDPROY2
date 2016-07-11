@@ -15,6 +15,7 @@ public class NodoAvl {
     NodoAvl izq;
     NodoAvl der;  
     int altura;    
+    public String nom;
     private static int correlativo=1;
     private final int id;    
     
@@ -41,6 +42,7 @@ public class NodoAvl {
         else
             System.err.println("No se permiten los valores duplicados: \"" 
                     +  String.valueOf(user)+"\".");
+        Log.logger.error("Colision de valores duplicados en Arbol AVL "+user);
     }
     public void graph(){
         Writer w = new Writer();
@@ -54,6 +56,18 @@ public class NodoAvl {
                "node [shape = record];\n"+
                 getNodes()+
                 "}\n";
+    }
+    
+    public void nameAvl(){
+        String name;
+        this.nom = "avl"+id;
+        Log.logger.info(this.nom+ " ** " +this.username);
+        if(this.izq != null){
+            this.izq.nameAvl();
+        }
+        if(this.der != null){
+            this.der.nameAvl();
+        }
     }
     
     private String getNodes() {
