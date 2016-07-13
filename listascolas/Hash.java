@@ -6,7 +6,7 @@
 package listascolas;
 import Utilities.*;
 /**
- *
+ *clase para la tabla de dispersión hash
  * @author rlopez
  */
 public class Hash {
@@ -20,13 +20,21 @@ public class Hash {
         size = 23;
         ocup = 0;
     }
-    
+    /**
+     * inicia una nueva tabla
+     * @param size 
+     */
     private void initMap(int size){
         for(int i = 0 ; i < size ; i++){
             map[i].code = -1;
         }
     }
     
+    /**
+     * funcion de plegamiento 
+     * @param toSum entero a plegar
+     * @return entero plegado
+     */
     public int getSumHalf(int toSum){
         int length = (int)(Math.log10(toSum)+1);
         int []arr = new int[length];
@@ -53,6 +61,11 @@ public class Hash {
         return num1 + num2;
     }
     
+    /**
+     * funcion modular
+     * @param num numero a obtener el residui
+     * @return residu al dividir entre 10
+     */
     public int getMod(int num){
         return getSumHalf(num) % 10;
     }
@@ -67,24 +80,45 @@ public class Hash {
         }
         return true;
     }
+    
+    /**
+     * obtiene el siguiente numero primo
+     * @param minNumberToCheck desde el que se comienza la busqueda
+     * @return siguiente numero primo
+     */
     public int getNextPrime(int minNumberToCheck) {
         for (int i = minNumberToCheck; true; i++) {
             if (isPrime(i))
                 return i;
         }
     }
-    
+    /**
+     * revisa el factor de ocupacion
+     * @return verdadero si aun esta dentro de lo permitido
+     */
     private boolean checkOcup(){
         double check = (double)ocup/(double)size;
         boolean t = (check < 0.4);
         return check < 0.4;
     }
     
+    /**
+     * inserta un nuevo producto
+     * @param code codigo del producto
+     * @param name nombre
+     * @param brand marca
+     * @param price precio
+     * @param image ruta de imagen
+     */
     public void insertProduct(int code, String name,
             String brand, double price, String image){
         insert(new Producto(code,name,brand,price,image));
     }
     
+    /**
+     * inserta un nuevo producto
+     * @param producto producto a insertar
+     */
     public void insert(Producto producto){
         int index = getMod(producto.code);
         if(map[index] == null){
@@ -119,6 +153,10 @@ public class Hash {
         }
     }
     
+    /**
+     * grafica tabla hash
+     * @return cadena en formato graphviz para graficar
+     */
     public String graphHash(){
         StringBuilder sb = new StringBuilder();
         sb.append("digraph hash {\n");
@@ -160,6 +198,11 @@ public class Hash {
         
     }
     
+    /**
+     * busca un producto dentro de la tabla hash
+     * @param code codigo del producto
+     * @return información del producto, si fue encontrado
+     */
     public Producto search(int code){
         int ind = getMod(code);
         Producto retorno = null;
@@ -194,6 +237,9 @@ public class Hash {
     }
     
     
+    /**
+     * funcion para el rehashing
+     */
     public void reHash(){
         int oldSize = size;
         int newSize = (getNextPrime(size+1));
@@ -207,7 +253,10 @@ public class Hash {
         }
     }
     
-    
+    /**
+     * envia los codigos de los productos
+     * @return cadena con los codigos de los productos
+     */
     public String sendProdCode(){
         StringBuilder sb = new StringBuilder();
         sb.append("");
@@ -225,6 +274,10 @@ public class Hash {
         
     }
     
+    /**
+     * envia los codigo de los productos
+     * @return cadena con todos los codigos de los productos
+     */
     public String sendProdName(){
         StringBuilder sb = new StringBuilder();
         sb.append("");
@@ -241,21 +294,29 @@ public class Hash {
         return sb.toString();
     }
     
-       public String sendProdBrand(){
+    /**
+     * envia las marcas de todos los productos
+     * @return  cadena que contiene todas las marcas de los productos
+     */
+    public String sendProdBrand(){
         StringBuilder sb = new StringBuilder();
         sb.append("");
-        if(map != null)
-        for(int i = 0 ; i < size ; i++){
-            if(map[i] != null){
-                if(i != (size - 2))
-                    sb.append(map[i].brand).append(",");
-                else
-                    sb.append(map[i].brand);
+        if(map != null){
+            for(int i = 0 ; i < size ; i++){
+                if(map[i] != null){
+                    if(i != (size - 2))
+                        sb.append(map[i].brand).append(",");
+                    else
+                        sb.append(map[i].brand);
+                }
             }
         }
         return sb.toString();
     }
-       
+       /**
+        * envia el precio de todos los productos
+        * @return cadena con todos los productos
+        */
        public String sendProdPrice(){
            StringBuilder sb = new StringBuilder();
            sb.append("");
@@ -272,6 +333,10 @@ public class Hash {
            return sb.toString();
        }
        
+       /**
+        * envia las rutas de todas la imagenes
+        * @return cadena con las rutas de todas la imágenes
+        */
        public String sendProdImage(){
            StringBuilder sb = new StringBuilder();
            sb.append("");
@@ -287,8 +352,4 @@ public class Hash {
            }
            return sb.toString();
        }
-    
-    
-    
-
 }

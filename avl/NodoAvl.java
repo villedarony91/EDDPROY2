@@ -4,7 +4,10 @@ package avl;
 import Utilities.*;
 import listascolas.*;
 
-
+/**
+ * Clase de nodos para el arbol avl
+ * @author rlopez
+ */
 public class NodoAvl {
 
     public String username;
@@ -26,7 +29,11 @@ public class NodoAvl {
         this.der = null;
         this.id=correlativo++;        
     }
-
+    /**
+     * Insertar un nodo en el arbol
+     * @param user nombre de usuario
+     * @param pass contraseña
+     */
     void insertar(String user, String pass) {
         if (user.compareTo(username) < 0) 
             if (izq == null) 
@@ -40,26 +47,15 @@ public class NodoAvl {
             else
                 der.insertar(user,pass);
         else
-            System.err.println("No se permiten los valores duplicados: \"" 
-                    +  String.valueOf(user)+"\".");
         Log.logger.error("Colision de valores duplicados en Arbol AVL "+user);
     }
-    public void graph(){
-        Writer w = new Writer();
-        w.write("treeGraph.dot", getGraphContent());
-        w.compileDot("treeGraph");
-    }
 
-    public String getGraphContent() {
-        return "digraph grafica{\n" +
-               "rankdir=TB;\n" + 
-               "node [shape = record];\n"+
-                getNodes()+
-                "}\n";
-    }
-    
+
+    /**
+     * Agrega un identificador unico a cada nodo, para ser utilizado en la 
+     * grafica de graphViz
+     */
     public void nameAvl(){
-        String name;
         this.nom = "avl"+id;
         Log.logger.info(this.nom+ " ** " +this.username);
         if(this.izq != null){
@@ -69,18 +65,5 @@ public class NodoAvl {
             this.der.nameAvl();
         }
     }
-    
-    private String getNodes() {
-        String name;
-            name="nodo"+id+" [ label =\"<left>|"+username+"|<right>\"];\n";
-            if(izq!=null){
-            name=name + izq.getNodes() +
-               "nodo"+id+":left->nodo"+izq.id+";\n";
-        }
-        if(der!=null){
-            name=name + der.getNodes() +
-               "nodo"+id+":right->nodo"+der.id+";\n";                    
-        }
-        return name;
-    }        
+          
 }

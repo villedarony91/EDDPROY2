@@ -11,7 +11,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import listascolas.*;
+import listaOrdenada.*;
 
 /**
  *
@@ -487,12 +490,27 @@ public class ArbolB {
         SubirClave(claveMedia,facturaMedia,actual,pagDer);
         
     }
-    
+    /**
+     * insertar
+     * @param numFactura
+     * @param fecha
+     * @param total
+     * @param usuario
+     * @param detalle 
+     */
     public void Insertar(int numFactura,String fecha,double total,NodoAvl usuario, Lista detalle){
         
         Pagina nuevo,actual;
         
-        Factura factura = new Factura(fecha,total,usuario,detalle);
+        
+        Nodo auxiliar = detalle.root;
+        Lista carrito = new Lista();
+        while (auxiliar != null){
+            carrito.insertTail(usuario.username, auxiliar.cant, auxiliar.prod);           
+            auxiliar = auxiliar.next;
+        } 
+        
+        Factura factura = new Factura(fecha,total,usuario,carrito);
         
         if(raiz == null){
             nuevo = new Pagina();
@@ -535,6 +553,7 @@ public class ArbolB {
     }
     
        public void Insertar(int numFactura,String fecha,double total,NodoAvl usuario){
+
         if(usuario == null){
             Log.logger.error("Usuario no encontrado");
             return;
@@ -584,66 +603,64 @@ public class ArbolB {
     }
     
     
-    public void imprimir(Pagina actual){
+    
+
+// GRAFICAR ARBOL B
+    
+    public String imprimirDetalleGraphviz(Lista lista,String cabecera){
+        String cuerpo = "";
         
-        if(actual != null){
-            imprimir(actual.ramas[0]);
-            for (int j= 0; j < actual.cuenta; j++){
-                System.out.print(actual.claves[j]+", ");
-                imprimir(actual.ramas[j+1]);
-            }
-        }
-    }
-     
-    public void imprimirGraphviz(Pagina actual,PrintWriter archivo){
-        
-        int j=0;
-        
-        if(actual != null){
-            archivo.println("");
-            archivo.print("nodo"+ actual.claves[0] +" [shape = record, label= \" <f0> ");
-            for (int i = 0; i<4; i++){
-                j++;
-                if(actual.claves[i] > 0){
-                    if(i != 4){
-                      archivo.print("| <f"+(i+j)+">" + actual.claves[i] + " \n "+ actual.facturas[i].fecha + " \n "+ actual.facturas[i].total + " \n "+ actual.facturas[i].usuario +"|<f"+((i+j)+1)+">\n");   
-                    }
-                    else{
-                        archivo.print("| <f"+(i+j)+">" + actual.claves[i] + " \n "+ actual.facturas[i].fecha + " \n "+ actual.facturas[i].total + " \n "+ actual.facturas[i].usuario); 
-                    } 
-                }  
-            }
-            archivo.print("\"]; \n");
-            archivo.println("");
+        if (lista.root != null){
             
-            for (int i = 0; i<5; i++){
-                if(actual.ramas[i]!=null){
-                    archivo.println("\"nodo"+actual.claves[0]+"\":f"+i*2+" -> \"nodo"+ actual.ramas[i].claves[0] +"\":f2; \n");
-                    imprimirGraphviz(actual.ramas[i],archivo);
+            Nodo auxiliar = lista.root;
+            
+            cuerpo = cuerpo + "\n subgraph cluster_0"+ cabecera +"{\n";
+            
+    
+            while (auxiliar != null ){
+                cuerpo = cuerpo + "nodo" + cabecera + "" + auxiliar.nodeId + " [label=\" Producto: " + auxiliar.prod.name + " \\nPrecio: " + auxiliar.prod.price + "\\n Cantidad: " + auxiliar.cant + "\"];\n"; 
+                
+                if (auxiliar.next != null){
+                    cuerpo = cuerpo + "nodo" + cabecera + "" + auxiliar.nodeId + "->" + "nodo" + cabecera + "" + auxiliar.next.nodeId + ";\n";
                 }
+                
+                auxiliar = auxiliar.next;
             }
+            
+           cuerpo = cuerpo + "}\n";
+            
         }
         
+        return cuerpo;
     }
-    
-    
+            
     public String imprimirGraphviz(Pagina actual,String cuerpo){
         
         int j=0;
         String cadena = cuerpo;
+        String listas = "";
         String punteros ="";
         
         if(actual != null){
             cadena = cadena + "\n ";
-            cadena = cadena + "nodo"+ actual.claves[0] +" [shape = record, label= \" <f0> ";
+            cadena = cadena + "nodoArbolB"+ actual.claves[0] +" [shape = record, label= \" <f0> ";
             for (int i = 0; i<4; i++){
                 j++;
                 if(actual.claves[i] > 0){
                     if(i != 4){
-                      cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario.username+"|<f"+((i+j)+1)+">\n";   
+                      cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " \\n Fecha: "+ actual.facturas[i].fecha + " \\n Total: "+ actual.facturas[i].total + " \\n Usuario: "+ actual.facturas[i].usuario.username+"|<f"+((i+j)+1)+">";   
+                      if(actual.facturas[i].detalle != null){
+                          listas = listas + "\"nodoArbolB"+actual.claves[0]+"\":f"+(i+j)+" -> " + "nodoArbolB" + actual.claves[i] + actual.facturas[i].detalle.root.nodeId+";";
+                          listas = listas + imprimirDetalleGraphviz(actual.facturas[i].detalle,"ArbolB" + actual.claves[i] );
+                      }
+                                
                     }
                     else{
-                        cadena = cadena + "| <f"+(i+j)+"> Factura: " + actual.claves[i] + " &#92;n Fecha: "+ actual.facturas[i].fecha + " &#92;n Total: "+ actual.facturas[i].total + " &#92;n Usuario: "+ actual.facturas[i].usuario.username+"\n";   
+                        cadena = cadena + " | <f"+(i+j)+"> Factura: " + actual.claves[i] + " \\n Fecha: "+ actual.facturas[i].fecha + " \\nTotal: "+ actual.facturas[i].total + " \\nw Usuario: "+ actual.facturas[i].usuario.username+"";   
+                        if(actual.facturas[i].detalle != null){
+                          listas = listas + "\"nodoArbolB"+actual.claves[0]+"\":f"+(i+j)+" -> " + "nodoArbolB" + actual.claves[i] + actual.facturas[i].detalle.root.nodeId+";";
+                          listas = listas + imprimirDetalleGraphviz(actual.facturas[i].detalle,"ArbolB" + actual.claves[i] );
+                      }
                     } 
                 }  
             }
@@ -652,18 +669,18 @@ public class ArbolB {
             
             for (int i = 0; i<5; i++){
                 if(actual.ramas[i]!=null){
-                    punteros = punteros + "\"nodo"+actual.claves[0]+"\":f"+i*2+" -> \"nodo"+ actual.ramas[i].claves[0] +"\":f2; \n";
+                    punteros = punteros + "\"nodoArbolB"+actual.claves[0]+"\":f"+i*2+" -> \"nodoArbolB"+ actual.ramas[i].claves[0] +"\":f2; \n";
                     punteros = punteros + imprimirGraphviz(actual.ramas[i],cadena);
                 }
             }
             
-            cadena = cadena + punteros;
+            cadena = cadena + punteros + listas;
             
         }
         return cadena;
     }
 
-public String graficarArolbB(ArbolB arbol){
+    public String graficarArolbB(ArbolB arbol){
         
         String dot;
         
@@ -675,8 +692,6 @@ public String graficarArolbB(ArbolB arbol){
         
         return dot;
     }    
-
-    
     // ------ NUMERO FACTURA ----
     
     public int numeroDeFactura(){
@@ -745,9 +760,9 @@ public String graficarArolbB(ArbolB arbol){
     
     
     
-    public void insertarDetalle(int numFactura, int cantidad, double precio, Producto producto){
+ public void insertarDetalle(int numFactura, int cantidad, double precio, Producto producto){
 
-       Pagina pagina = buscarPagina(numFactura,this.raiz); //Busca la pagina en la que se encuentra el numero de Factura
+        Pagina pagina = buscarPagina(numFactura,this.raiz); //Busca la pagina en la que se encuentra el numero de Factura
         
         
         
@@ -765,6 +780,7 @@ public String graficarArolbB(ArbolB arbol){
                         else{
                             Lista lista = new Lista();
                             lista.insertDetalle(cantidad,precio,producto);
+                            pagina.facturas[i].detalle = lista;
                             pagina.facturas[i].total = pagina.facturas[i].total + (precio * cantidad);
                         }
                     }
@@ -776,7 +792,6 @@ public String graficarArolbB(ArbolB arbol){
         }
         
     }
-    
     
     // ------- REPORTES ----------
     
@@ -995,6 +1010,149 @@ public String graficarArolbB(ArbolB arbol){
         }
         
         return reporte;
+    }
+     //------- REPORTE3 ----------
+    
+    private void recorridoReporte3(String fechaIni, String fechaFin, Pagina actual, listaDoble lista) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            recorridoReporte3(fechaIni,fechaFin,actual.ramas[0],lista);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                if (actual.facturas[j]!=null){
+                    
+                    fechaActual = formato.parse(actual.facturas[j].fecha);
+
+                    if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+
+                      lista.insertar(actual.facturas[j].usuario.username,1);
+
+                    }
+                    if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+
+                        lista.insertar(actual.facturas[j].usuario.username,1);
+                    }
+
+                    recorridoReporte3(fechaIni,fechaFin,actual.ramas[j+1],lista);    
+                }
+                   
+            }
+        }
+        
+        
+    }
+    
+    
+    public String reporte3(String fechaInicial, String fechaFinal){
+        try {
+            String cuerpo = "";
+            
+            listaDoble lista = new listaDoble();
+            recorridoReporte3(fechaInicial,fechaFinal,this.raiz,lista);
+            
+            //recorrer la lista y meterla a un string;
+            
+            if (!lista.estaVacia()){
+                
+                NodoListaDoble auxiliar =  lista.primerNodo;
+                
+                while (auxiliar != null ){
+                    cuerpo = cuerpo + "Nombre: " + auxiliar.nombre + ",Cantidad: "+ auxiliar.cantidad+";";
+                    auxiliar = auxiliar.sig;
+                }
+                
+            }
+            
+            
+            return cuerpo;
+        } catch (ParseException ex) {
+            Logger.getLogger(ArbolB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+    
+    
+     // ------- REPORTE2 ----------
+    
+    private void recorridoReporte2(String fechaIni, String fechaFin, Pagina actual, listaDoble lista) throws ParseException{
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy"); 
+        Date fechaActual;
+        Date fechaInicial = formato.parse(fechaIni);
+        Date fechaFinal = formato.parse(fechaFin);
+        
+        if(actual != null){
+            recorridoReporte2(fechaIni,fechaFin,actual.ramas[0],lista);
+            for (int j= 0; j < (actual.cuenta); j++){
+                
+                if (actual.facturas[j]!=null){
+                    
+                    if (actual.facturas[j].detalle !=null){
+                        
+                        fechaActual = formato.parse(actual.facturas[j].fecha);
+
+                        if( fechaActual.after(fechaInicial) && fechaActual.before(fechaFinal)){
+                            
+                            Nodo auxiliar = actual.facturas[j].detalle.root;
+                            
+                            while (auxiliar != null && auxiliar.prod != null){
+                                lista.insertar(""+auxiliar.prod.code,auxiliar.cant);
+                                auxiliar = auxiliar.next;
+                            }
+                            
+                            
+
+                        }
+                        if(fechaActual.equals(fechaInicial) || fechaActual.equals(fechaInicial)){
+
+                            Nodo auxiliar = actual.facturas[j].detalle.root;
+                            
+                            while (auxiliar != null && auxiliar.prod != null){
+                                lista.insertar(""+auxiliar.prod.code,auxiliar.cant);
+                                auxiliar = auxiliar.next;
+                            }
+                            
+                        }
+
+                        recorridoReporte2(fechaIni,fechaFin,actual.ramas[j+1],lista);
+                    }
+                }
+                   
+            }
+        }
+        
+        
+    }
+    
+    
+    public String reporte2(String fechaInicial, String fechaFinal){
+        try {
+            String cuerpo = "";
+            
+            listaDoble lista = new listaDoble();
+            recorridoReporte2(fechaInicial,fechaFinal,this.raiz,lista);
+            
+            //recorrer la lista y meterla a un string;
+            
+            if (!lista.estaVacia()){
+                
+                NodoListaDoble auxiliar =  lista.primerNodo;
+                
+                while (auxiliar != null ){
+                    cuerpo = cuerpo + "Producto: " + auxiliar.nombre + ",Cantidad: "+ auxiliar.cantidad+";";
+                    auxiliar = auxiliar.sig;
+                }
+                
+            }
+            
+            return cuerpo;
+        } catch (ParseException ex) {
+            Logger.getLogger(ArbolB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
     }
     
         

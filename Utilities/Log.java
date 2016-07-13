@@ -8,7 +8,7 @@ package Utilities;
 import org.apache.log4j.Logger;
 
 /**
- *
+ *Clase para manejar el Log
  * @author rlopez
  */
 public class Log {

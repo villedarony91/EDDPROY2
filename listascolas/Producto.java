@@ -7,7 +7,7 @@ package listascolas;
 
 
 /**
- *
+ *Clase tipo producto para ser utilizada en listas y en la tabla Hash
  * @author rlopez
  */
 public class Producto {

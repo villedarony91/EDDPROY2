@@ -6,7 +6,7 @@
 package listascolas;
 
 /**
- *
+ *Clase Nodo para las listas
  * @author rlopez
  */
 public class Nodo {
@@ -18,7 +18,9 @@ public class Nodo {
     public Producto prod;
     public Nodo next;
     public double precioDetalle;
-    public String nodeId;
+    public int nodeId;
+
+
     
     Nodo(String user){
         this.user = user;

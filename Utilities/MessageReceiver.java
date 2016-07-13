@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- *
+ *Clase para el envio y recepcion de los mensajes
  * @author rlopez
  */
 public class MessageReceiver {
@@ -20,6 +20,10 @@ public class MessageReceiver {
     public Hash hash = new Hash();
     public ArbolB arbolB = new ArbolB();
 
+    /**
+     * Metodo que recibe los mensajes
+     * @param message mensaje recibido
+     */
     public void receiveMessage(String message){
         String tmp = message.replaceAll("\\s+", "");
         tmp = tmp.replaceAll(";", "");
@@ -28,6 +32,10 @@ public class MessageReceiver {
         distribute(str);
     }
     
+    /**
+     * Distribuye su mensaje segun su encabezado
+     * @param message mensaje
+     */
     void distribute(String[] message){        
         if(message.length == 2 ){
             String[] str = message[1].split(",");
@@ -66,38 +74,51 @@ public class MessageReceiver {
         }
     }
     
+    /**
+     * Inserta en el detalle de la factura
+     * @param msg mensaje ya parseado
+     */
+    
     public void insertDet(String [] msg){
         try{
             int fact = Integer.parseInt(msg[0]);
             int cant = Integer.parseInt(msg[1]);
             double price = Double.parseDouble(msg[2]);
             int code = Integer.parseInt(msg[3]);
-            arbolB.insertarDetalle(fact, cant,price, hash.search(code));            
+            arbolB.insertarDetalle(fact, cant,price, hash.search(code));
         }catch(Exception ex){
             Log.logger.error("Error en insercion de detalle");
         }
-
-    }
-        int count = 0;    
-        public void sale(String user){
-            NodoAvl tmp = avl.searchNode(user);
-            double tot = 0;
-            if(tmp != null && tmp.carrito != null && tmp.carrito.root != null){
-                Date date = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-                String strDate = sdf.format(date);
-                Lista tmpCarr = tmp.carrito;
-                Nodo aux = tmpCarr.root;
-                
-                while(aux != null){
-                    tot += (aux.prod.price * aux.cant);
-                    aux = aux.next;
-                }
-                count ++;
-                arbolB.Insertar(count, strDate, tot, tmp, tmpCarr);
-            }
-        }
         
+    }
+    
+    /**
+     * inserta el producto en la venta
+     * @param user usuario que realiza la compra
+     */
+    public void sale(String user){
+        NodoAvl tmp = avl.searchNode(user);
+        double tot = 0;
+        if(tmp != null && tmp.carrito != null && tmp.carrito.root != null){
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String strDate = sdf.format(date);
+            Lista tmpCarr = new Lista();
+            tmpCarr = tmp.carrito;
+            Nodo aux = tmpCarr.root;            
+            while(aux != null){
+                tot += (aux.prod.price * aux.cant);
+                aux = aux.next;
+            }
+            int numFact = arbolB.numeroDeFactura();
+            arbolB.Insertar(numFact, strDate, tot, tmp, tmpCarr);
+        }
+    }
+    
+    /**
+     * Inserta en arbol B
+     * @param msg mensaje a insertar
+     */
     void insertToB(String[] msg){
         if(msg.length == 4){
             try{
@@ -106,21 +127,25 @@ public class MessageReceiver {
                 arbolB.Insertar(factura, msg[1], total, avl.searchNode(msg[3]));
             }catch(Exception ex){
                 Log.logger.warn("Venta en formato incorrecto");
-            }  
+            }
         }else{
             Log.logger.warn("Venta en formato incorrecto");
         }
     }
     
+    /**
+     * Inserta en el carrito
+     * @param msj mensaje recibido
+     */
     void insertToCarrito(String [] msj){
         if(msj.length == 3){
             try{
-            int code = Integer.parseInt(msj[2]);
-            int cant = Integer.parseInt(msj[1]);
-            Producto prod = hash.search(code);
-            if(prod != null){
-             avl.insertToCarrito(msj[0], cant, prod);
-            }
+                int code = Integer.parseInt(msj[2]);
+                int cant = Integer.parseInt(msj[1]);
+                Producto prod = hash.search(code);
+                if(prod != null){
+                    avl.insertToCarrito(msj[0], cant, prod);
+                }
             }catch(Exception ex){
                 Log.logger.warn("Carrito en formato incorrecto");
             }
@@ -129,6 +154,10 @@ public class MessageReceiver {
         }
     }
     
+    /**
+     * Inserta en la tabla hash
+     * @param nodeProd nodo del producto a insertar
+     */
     void insertToHash(String[] nodeProd){
         if(nodeProd.length == 5){
             hash.insertProduct(Integer.parseInt(nodeProd[0]),
@@ -137,6 +166,10 @@ public class MessageReceiver {
         }
     }
     
+    /**
+     * Inserta un usuario en el arbol Avl
+     * @param nodeAvl nodo del avl a insertar
+     */
     void insertToAvlUser(String[] nodeAvl){
         if(nodeAvl.length == 2){
             avl.insert(nodeAvl[0], nodeAvl[1]);
@@ -145,7 +178,10 @@ public class MessageReceiver {
         }
         
     }
-    
+    /**
+     * inserta una direccion
+     * @param msj mensaje recibido
+     */
     void insertAdress(String[] msj){
         if(msj.length == 4){
             int env;
@@ -153,16 +189,20 @@ public class MessageReceiver {
             try{
                 env = Integer.parseInt(msj[2]);
                 fact = Integer.parseInt(msj[3]);
-                avl.insertAdress(msj[0], msj[1], env, fact);      
+                avl.insertAdress(msj[0], msj[1], env, fact);
             }catch(Exception ex){
                 Log.logger.error("Error en formato de numero");
-            }                     
+            }
         }else{
             Log.logger.warn("Direccion en formato incorrecto");
         }
         
     }
     
+    /**
+     * Inserta en la lista de deseos
+     * @param msj mensaje recibido
+     */
     void insertToWhish(String[] msj){
         if(msj.length == 3){
             try{
